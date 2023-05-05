@@ -9,16 +9,10 @@
 UploadFrame::UploadFrame(const std::string& title) :
 	wxFrame(nullptr, wxID_ANY, title, wxPoint(wxDefaultPosition),
 		wxSize(wxDefaultSize), wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX)),
-	/*
-	m_appendFeatures{ "python \"./subprocesses/append features.py\"" },
-	m_deleteFeatures{ "python \"./subprocesses/delete features.py\"" },
-	m_tableToPoint{ "python \"./subprocesses/table to point.py\"" }
-	UNC paths used to redirect the user's desktop aren't supported,
-	had to use absolute path to get it to work on the PD machine...
-	*/
-	m_appendFeatures{ "python \"Y:/Crime Mapping/Update Assistant/subprocesses/append features.py\"" },
-	m_deleteFeatures{ "python \"Y:/Crime Mapping/Update Assistant/subprocesses/delete features.py\""},
-	m_tableToPoint{ "python \"Y:/Crime Mapping/Update Assistant/subprocesses/table to point.py\""}
+	m_appendFeaturesScript{ "append features.py" },
+	m_deleteFeaturesScript{ "delete features.py"},
+	m_tableToPointScript{ "table to point.py"},
+	m_pathFile{"./path/path.ini"}
 {
 	wxPanel* panel = new wxPanel(this);
 
@@ -57,6 +51,28 @@ UploadFrame::UploadFrame(const std::string& title) :
 	showMeHowButton->Bind(wxEVT_BUTTON, &UploadFrame::showVideo, this);
 }
 
+std::string UploadFrame::callPython(const std::string& script)
+{
+	std::string path{};
+
+	if (std::filesystem::exists(m_pathFile))
+	{
+		std::ifstream stream{ m_pathFile };
+		if (stream.is_open())
+		{
+			std::getline(stream, path);
+
+			// Remove double quotes from path string if present.
+			while (path.find('"') != std::string::npos)
+			{
+				path.erase(std::find(path.begin(), path.end(), '"'));
+			}
+		}
+		return "python \"" + path + "/" + script + "\"";
+	}
+	return "cmd /k (echo \"PATH.INI FILE WAS NOT FOUND!\")";
+}
+
 void UploadFrame::exit(wxCommandEvent& evt)
 {
 	Close();
@@ -81,9 +97,9 @@ void UploadFrame::help(wxCommandEvent& evt)
 void UploadFrame::next(wxCommandEvent& evt)
 {
 	wxLogStatus("Performing geoprocessing operations...");
-	system(m_tableToPoint.c_str());
-	system(m_deleteFeatures.c_str());
-	system(m_appendFeatures.c_str());
+	system(callPython(m_tableToPointScript).c_str());
+	system(callPython(m_deleteFeaturesScript).c_str());
+	system(callPython(m_appendFeaturesScript).c_str());
 	Close();
 
 	DoneFrame* doneFrame = new DoneFrame("Crime Map Update Assistant");
