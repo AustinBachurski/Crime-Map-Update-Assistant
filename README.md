@@ -1,6 +1,6 @@
 # Crime-Map-Update-Assistant
 
-Source code for the Crime Map Update Assistant as described in TrackIT documentation.
+Source code for the Kalispell Crime Map Update Assistant, as described in TrackIT documentation.
 
 ![Crime Mapper](screenshot/screenshot.png)
 
